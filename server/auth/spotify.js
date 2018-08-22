@@ -13,14 +13,35 @@ if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
       callbackURL: process.env.SPOTIFY_CALLBACK
     }
 
-passport.use(new SpotifyStrategy({
-    clientID: client_id,
-    clientSecret: client_secret,
-    callbackURL: "http://localhost:8888/auth/spotify/callback"
-  },
-  function(accessToken, refreshToken, expires_in, profile, done) {
-    User.findOrCreate({ spotifyId: profile.id }, function (err, user) {
-      return done(err, user);
-    });
-  }
-));
+const strategy = new SpotifyStrategy(
+    spotifyConfig,
+    (token, refreshToken, profile, done) => {
+        const spotifyId = profile.id
+        const name = profile.displayName
+        const email = profile.emails[0].value
+
+        User.find({where: {spotifyId}})
+        .then(
+            foundUser =>
+            foundUser
+                ? done(null, foundUser)
+                : User.create({name, email, spotifyId}).then(createdUser =>
+                    done(null, createdUser)
+                )
+        )
+        .catch(done)
+    }
+)
+
+passport.use(strategy)
+
+router.get('/', passport.authenticate('spotify', {scope: ['user-read-email', 'user-read-private'] }),);
+
+router.get(
+    '/callback',
+    passport.authenticate('spotify', {
+      successRedirect: '/home',
+      failureRedirect: '/login'
+    })
+  )
+}

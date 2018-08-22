@@ -7,6 +7,7 @@ import history from '../history'
 const GET_USER = 'GET_USER'
 const REMOVE_USER = 'REMOVE_USER'
 
+
 /**
  * INITIAL STATE
  */
@@ -18,6 +19,7 @@ const defaultUser = {}
 const getUser = user => ({type: GET_USER, user})
 const removeUser = () => ({type: REMOVE_USER})
 
+
 /**
  * THUNK CREATORS
  */
@@ -27,9 +29,9 @@ export const me = () => dispatch =>
     .then(res => dispatch(getUser(res.data || defaultUser)))
     .catch(err => console.error(err))
 
-export const auth = (email, password, method) => dispatch =>
+export const auth = (email, password) => dispatch =>
   axios
-    .post(`/auth/${method}`, {email, password})
+    .post(`/auth/spotify`, {email, password})
     .then(
       res => {
         dispatch(getUser(res.data))
