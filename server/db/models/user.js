@@ -26,9 +26,16 @@ const User = db.define('user', {
   },
   spotifyId: {
     type: Sequelize.STRING
+  },
+  accessToken: {
+    type: Sequelize.STRING,
+    validate: { len: [0,500] }
+  },
+  imgUrl: {
+    type: Sequelize.STRING
   }
 })
-
+ 
 module.exports = User
 
 /**

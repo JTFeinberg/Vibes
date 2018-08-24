@@ -19,13 +19,14 @@ const strategy = new SpotifyStrategy(
         const spotifyId = profile.id
         const name = profile.displayName
         const email = profile.emails[0].value
+        const imgUrl = profile.photos[0]
 
         User.find({where: {spotifyId}})
         .then(
             foundUser =>
             foundUser
                 ? done(null, foundUser)
-                : User.create({name, email, spotifyId}).then(createdUser =>
+                : User.create({name, email, spotifyId, imgUrl}).then(createdUser =>
                     done(null, createdUser)
                 )
         )
@@ -35,13 +36,26 @@ const strategy = new SpotifyStrategy(
 
 passport.use(strategy)
 
-router.get('/', passport.authenticate('spotify', {scope: ['user-read-email', 'user-read-private'] }),);
+router.get('/', passport.authenticate('spotify', {scope: ['user-read-email', 'user-read-private', 'user-read-playback-state'] }),);
 
-router.get(
-    '/callback',
-    passport.authenticate('spotify', {
-      successRedirect: '/home',
-      failureRedirect: '/login'
-    })
+router.get('/callback', passport.authenticate('spotify'), (req,res) => {
+    let {error, code} = req.query
+    if(code){
+        console.log('USER>>>',req.user)
+        User.findById(req.user.id)
+        .then(user => user.update({accessToken: code}))
+        .then(res.redirect('/home'))
+    } else {
+        res.redirect('/login');
+    }
+    }
   )
+
+//   router.get('/callback', passport.authenticate('spotify', {
+//     successRedirect: '/home',
+//     failureRedirect: '/login'
+//   })
+//     )
 }
+
+
